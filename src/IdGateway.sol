@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.21;
+pragma solidity ^0.8.21;
 
-import {IIdGateway} from "./interfaces/IIdGateway.sol";
-import {IStorageRegistry} from "./interfaces/IStorageRegistry.sol";
-import {IIdRegistry} from "./interfaces/IIdRegistry.sol";
-import {Guardians} from "./abstract/Guardians.sol";
-import {TransferHelper} from "./libraries/TransferHelper.sol";
-import {EIP712} from "./abstract/EIP712.sol";
-import {Nonces} from "./abstract/Nonces.sol";
-import {Signatures} from "./abstract/Signatures.sol";
+import { IIdGateway } from "./interfaces/IIdGateway.sol";
+import { IStorageRegistry } from "./interfaces/IStorageRegistry.sol";
+import { IIdRegistry } from "./interfaces/IIdRegistry.sol";
+import { Guardians } from "./abstract/Guardians.sol";
+import { TransferHelper } from "./libraries/TransferHelper.sol";
+import { EIP712 } from "./abstract/EIP712.sol";
+import { Nonces } from "./abstract/Nonces.sol";
+import { Signatures } from "./abstract/Signatures.sol";
 
 /**
  * @title Farcaster IdGateway
@@ -62,7 +62,7 @@ contract IdGateway is IIdGateway, Guardians, Signatures, EIP712, Nonces {
      *         Set the owner of the contract to the provided _owner.
      *
      * @param _idRegistry      IdRegistry address.
-     * @param _storageRegistry StorageRegistery address.
+     * @param _storageRegistry StorageRegistry address.
      * @param _initialOwner    Initial owner address.
      *
      */
@@ -101,7 +101,7 @@ contract IdGateway is IIdGateway, Guardians, Signatures, EIP712, Nonces {
     /**
      * @inheritdoc IIdGateway
      */
-    function register(address recovery) external payable returns (uint256, uint256) {
+    function register(address recovery) external payable returns (uint256 fid, uint256 overpayment) {
         return register(recovery, 0);
     }
 
@@ -121,7 +121,7 @@ contract IdGateway is IIdGateway, Guardians, Signatures, EIP712, Nonces {
         address recovery,
         uint256 deadline,
         bytes calldata sig
-    ) external payable returns (uint256, uint256) {
+    ) external payable returns (uint256 fid, uint256 overpayment) {
         return registerFor(to, recovery, deadline, sig, 0);
     }
 
@@ -133,9 +133,9 @@ contract IdGateway is IIdGateway, Guardians, Signatures, EIP712, Nonces {
         uint256 extraStorage
     ) public payable whenNotPaused returns (uint256 fid, uint256 overpayment) {
         /* Revert if signature is invalid */
-        _verifyRegisterSig({to: to, recovery: recovery, deadline: deadline, sig: sig});
+        _verifyRegisterSig(to, recovery, deadline, sig);
         fid = idRegistry.register(to, recovery);
-        overpayment = _rentStorage(fid, extraStorage, msg.value, msg.sender);
+        overpayment = _rentStorage(fid, extraStorage, msg.value, to);
     }
 
     /*//////////////////////////////////////////////////////////////
